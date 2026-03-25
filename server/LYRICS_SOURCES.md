@@ -1,6 +1,6 @@
 # Lyrics Sources
 
-MusicSync fetches lyrics using a waterfall strategy — each source is tried in order until lyrics are found.
+Lyricsync fetches lyrics using a waterfall strategy — each source is tried in order until lyrics are found.
 
 ## 1. LRCLIB (Primary)
 

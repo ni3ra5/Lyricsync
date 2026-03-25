@@ -1,5 +1,5 @@
 {
-  "name": "choirsync",
+  "name": "lyricsync",
   "version": "1.0.0",
   "description": "Karaoke-style real-time lyric sync app for group gatherings",
   "scripts": {

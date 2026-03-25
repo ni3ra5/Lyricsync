@@ -114,34 +114,31 @@ export default function GuestView() {
         )}
       </header>
 
-      {song && (
-        <div className="guest-now-playing">
-          <NowPlaying song={song} elapsed={elapsed} lyrics={lyrics} playing={playing} />
-        </div>
-      )}
-
-      <div className="guest-lyrics">
-        {song ? (
-          <LyricsDisplay lyrics={lyrics} plainLyrics={plainLyrics} />
-        ) : (
-          <div className="guest-waiting">
-            <div className="guest-waiting__inner">
-              <div className="guest-waiting__icon card">
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <p className="guest-waiting__text">Waiting for host...</p>
+      {song ? (
+        <div className="main-section">
+          <div className="lyrics-section">
+            <div className="lyrics-card card">
+              <LyricsDisplay lyrics={lyrics} plainLyrics={plainLyrics} />
             </div>
           </div>
-        )}
-      </div>
-
-      <div className="status-bar">
-        <p className="status-bar__text">
-          {playing ? 'Now playing' : song ? 'Paused' : 'Waiting'} &middot; Room {roomId}
-        </p>
-      </div>
+          <div className="now-playing-section">
+            <div className="now-playing-card card dot-grid">
+              <NowPlaying song={song} elapsed={elapsed} lyrics={lyrics} playing={playing} />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="guest-waiting">
+          <div className="guest-waiting__inner">
+            <div className="guest-waiting__icon card">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p className="guest-waiting__text">Waiting for host...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

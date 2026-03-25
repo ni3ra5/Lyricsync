@@ -181,19 +181,18 @@ export default function HostView() {
       )}
 
       {song && !loadingSong && (
-        <>
-          <div className="now-playing-section">
-            <div className="now-playing-card card dot-grid">
-              <NowPlaying song={song} elapsed={elapsed} lyrics={lyrics} onSeek={handleSeek} playing={playing} onPlay={handlePlay} onPause={handlePause} onStop={handleRestart} />
-            </div>
-          </div>
-
+        <div className="main-section">
           <div className="lyrics-section">
             <div className="lyrics-card card">
               <LyricsDisplay lyrics={lyrics} plainLyrics={plainLyrics} />
             </div>
           </div>
-        </>
+          <div className="now-playing-section">
+            <div className="now-playing-card card dot-grid">
+              <NowPlaying song={song} elapsed={elapsed} lyrics={lyrics} onSeek={handleSeek} playing={playing} onPlay={handlePlay} onPause={handlePause} onStop={handleRestart} />
+            </div>
+          </div>
+        </div>
       )}
 
       {!song && !loadingSong && (

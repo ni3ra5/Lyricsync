@@ -1,16 +1,7 @@
-import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const [qr, setQr] = useState(null);
-
-  useEffect(() => {
-    fetch('/api/homeqr')
-      .then((r) => r.json())
-      .then(setQr)
-      .catch(() => {});
-  }, []);
 
   return (
     <div className="home">
@@ -24,8 +15,8 @@ export default function HomePage() {
       <div className="home__content">
         <div className="home__logo-block">
           <h1 className="home__title">
-            <span className="home__title-accent">Music</span>
-            <span className="home__title-text">Sync</span>
+            <span className="home__title-accent">Lyric</span>
+            <span className="home__title-text">sync</span>
           </h1>
           <p className="home__tagline">Synchronized lyrics for everyone in the room</p>
         </div>
@@ -68,16 +59,8 @@ export default function HomePage() {
         <p className="home__hint">You'll become the host — guests can join by scanning your QR code</p>
       </div>
 
-      {/* Small QR code in corner to open on mobile */}
-      {qr && (
-        <div className="home__qr">
-          <img className="home__qr-img" src={qr.qrDataUrl} alt="Scan to open on mobile" />
-          <span className="home__qr-label">Open on mobile</span>
-        </div>
-      )}
-
       <footer className="home__footer">
-        <span className="home__footer-text">MusicSync</span>
+        <span className="home__footer-text">Lyricsync</span>
       </footer>
     </div>
   );

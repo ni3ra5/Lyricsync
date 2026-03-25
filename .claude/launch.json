@@ -2,13 +2,13 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "choirsync-server",
+      "name": "lyricsync-server",
       "runtimeExecutable": "node",
       "runtimeArgs": ["server/index.js"],
       "port": 3002
     },
     {
-      "name": "choirsync-client",
+      "name": "lyricsync-client",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "cwd": "client",

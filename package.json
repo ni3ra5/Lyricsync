@@ -1,0 +1,17 @@
+{
+  "name": "choirsync",
+  "version": "1.0.0",
+  "description": "Karaoke-style real-time lyric sync app for group gatherings",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "node server/index.js",
+    "client": "cd client && npm run dev"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "qrcode": "^1.5.3",
+    "socket.io": "^4.7.4",
+    "concurrently": "^8.2.2"
+  }
+}

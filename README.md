@@ -2,7 +2,7 @@
 
 # LYRICSYNC
 
-### Lyrics for everyone in the room
+### Synchronized lyrics for everyone in the room
 
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)](https://react.dev/)
@@ -12,7 +12,7 @@
 
 ---
 
-A host searches and plays songs while guests join via QR code to follow along with lyrics on their own devices.
+A host searches and plays songs while guests join via QR code to follow along with synced lyrics on their own devices.
 
 </div>
 
@@ -23,7 +23,7 @@ A host searches and plays songs while guests join via QR code to follow along wi
 | | Feature | Description |
 |---|---|---|
 | :mag: | **Song Search** | Search any song via the iTunes catalog |
-| :musical_note: | **Lyrics Display** | Song lyrics displayed alongside playback |
+| :musical_note: | **Synced Lyrics** | Time-stamped lyrics that scroll in real-time with playback |
 | :iphone: | **QR Code Sharing** | Guests scan a QR code to instantly join the session |
 | :globe_with_meridians: | **Multi-Source Lyrics** | Fetches from LRCLIB, JioSaavn (Hindi/Bollywood), and lyrics.ovh |
 | :speaker: | **Audio Streaming** | Full song audio streamed via yt-dlp and proxied through the server |
@@ -91,7 +91,7 @@ Lyricsync/
   ├── Play ───────────────► │                         │
   │                         ├── Broadcast state ────► │
   │                         │    (play/pause/seek)    │
-  │     ◄── Lyrics ──────────┤── Lyrics ────────────► │
+  │     ◄── Synced lyrics ──┤── Synced lyrics ──────► │
   │                         │                         │
 ```
 
@@ -100,7 +100,7 @@ Lyricsync/
 3. On song selection, the server fetches lyrics and audio via yt-dlp
 4. **Guests** scan the QR code to join the room on their devices
 5. The server broadcasts playback state to all clients via Socket.IO
-6. Each client displays the lyrics alongside playback
+6. Each client renders lyrics synced to the current playback position
 
 ## Scripts
 

@@ -104,7 +104,7 @@ export default function GuestView() {
           <span className="app-logo__text">Sync</span>
         </h1>
         <div className="connection-status">
-          <span className={`connection-dot ${connected ? 'connection-dot--live' : 'connection-dot--reconnecting'}`} />
+          <span className={`connection-dot ${connected ? 'connection-dot--live' : 'connection-dot--disconnected'}`} />
           <span className="connection-label">{connected ? 'Live' : 'Reconnecting'}</span>
         </div>
         {qrDataUrl && (

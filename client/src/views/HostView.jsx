@@ -55,7 +55,7 @@ export default function HostView() {
   useEffect(() => {
     if (!audioRef.current || !audioUrl || elapsed == null) return;
     const elapsedSec = elapsed / 1000;
-    if (Math.abs(audioRef.current.currentTime - elapsedSec) > 2) {
+    if (Math.abs(audioRef.current.currentTime - elapsedSec) > 0.5) {
       audioRef.current.currentTime = elapsedSec;
     }
   }, [elapsed]);

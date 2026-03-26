@@ -97,7 +97,7 @@ Lyricsync/
 
 1. **Host** starts a session from the homepage, creating a room
 2. Host searches for a song — the server checks iTunes and verifies lyrics availability
-3. On song selection, the server fetches synced lyrics and audio via yt-dlp
+3. On song selection, the server fetches lyrics and audio via yt-dlp
 4. **Guests** scan the QR code to join the room on their devices
 5. The server broadcasts playback state to all clients via Socket.IO
 6. Each client renders lyrics synced to the current playback position

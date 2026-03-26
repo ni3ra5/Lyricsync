@@ -1,4 +1,34 @@
+import { useRef, useCallback } from 'react';
+
 export default function NowPlaying({ song, elapsed, lyrics, onSeek, playing, onPlay, onPause, onStop }) {
+  const progressRef = useRef(null);
+  const draggingRef = useRef(false);
+
+  const seekFromEvent = useCallback((clientX) => {
+    if (!onSeek || !progressRef.current) return;
+    const rect = progressRef.current.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const totalMs = song.durationMs
+      || (lyrics && lyrics.length > 0 ? lyrics[lyrics.length - 1].time + 5000 : 0);
+    onSeek(Math.round(ratio * totalMs));
+  }, [onSeek, song, lyrics]);
+
+  const handlePointerDown = useCallback((e) => {
+    if (!onSeek) return;
+    draggingRef.current = true;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    seekFromEvent(e.clientX);
+  }, [onSeek, seekFromEvent]);
+
+  const handlePointerMove = useCallback((e) => {
+    if (!draggingRef.current) return;
+    seekFromEvent(e.clientX);
+  }, [seekFromEvent]);
+
+  const handlePointerUp = useCallback(() => {
+    draggingRef.current = false;
+  }, []);
+
   if (!song) return null;
 
   const totalMs = song.durationMs
@@ -27,15 +57,16 @@ export default function NowPlaying({ song, elapsed, lyrics, onSeek, playing, onP
         {totalMs > 0 && (playing || elapsed > 0) && (
           <div className="now-playing__progress-row">
             <div
+              ref={progressRef}
               className="progress-bar"
-              onClick={(e) => {
-                if (!onSeek) return;
-                const rect = e.currentTarget.getBoundingClientRect();
-                const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-                onSeek(Math.round(ratio * totalMs));
-              }}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerUp}
+              style={{ touchAction: 'none' }}
             >
               <div className="progress-bar__fill glow-bar" style={{ width: `${progress * 100}%` }} />
+              {onSeek && <div className="progress-bar__thumb" style={{ left: `${progress * 100}%` }} />}
             </div>
             <span className="progress-time">
               {formatTime(elapsed || 0)} / {formatTime(totalMs)}

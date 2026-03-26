@@ -19,6 +19,8 @@ export default function HostView() {
   const [audioUrl, setAudioUrl] = useState(null);
   const [guestCount, setGuestCount] = useState(0);
   const [loadingSong, setLoadingSong] = useState(false);
+  const [lyricsLoading, setLyricsLoading] = useState(false);
+  const lyricsEmitCount = useRef(0);
   const audioRef = useRef(null);
 
   // Load audio and seek to correct position when URL changes
@@ -90,6 +92,14 @@ export default function HostView() {
       setElapsed(0);
       setPlaying(false);
       setLoadingSong(false);
+      // First emission has null lyrics (loading); second emission is the result
+      if (l === null && pl === null && lyricsEmitCount.current === 0) {
+        setLyricsLoading(true);
+        lyricsEmitCount.current = 1;
+      } else {
+        setLyricsLoading(false);
+        lyricsEmitCount.current = 0;
+      }
     };
     const onAudioReady = ({ audioUrl: url }) => {
       // Append timestamp to bust browser cache when song changes
@@ -129,6 +139,7 @@ export default function HostView() {
         artworkUrl: songData.artworkUrl,
         previewUrl: songData.previewUrl,
         durationMs: songData.durationMs,
+        source: songData.source,
       });
     },
     [roomId]
@@ -184,7 +195,7 @@ export default function HostView() {
         <div className="main-section">
           <div className="lyrics-section">
             <div className="lyrics-card card">
-              <LyricsDisplay lyrics={lyrics} plainLyrics={plainLyrics} />
+              <LyricsDisplay lyrics={lyrics} plainLyrics={plainLyrics} loading={lyricsLoading} />
             </div>
           </div>
           <div className="now-playing-section">

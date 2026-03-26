@@ -1,11 +1,14 @@
 const { exec } = require('child_process');
 const { getRoom } = require('./rooms');
 
-function fetchAudioUrl(song, artist) {
+function fetchAudioUrl(videoIdOrQuery, source) {
   return new Promise((resolve, reject) => {
-    const query = `${song} ${artist} official audio`;
     const ytDlp = process.env.YT_DLP_PATH || '/Users/nibraskhan/Library/Python/3.9/bin/yt-dlp';
-    const cmd = `"${ytDlp}" -f "bestaudio/best" --extractor-args "youtube:player_client=android" --get-url "ytsearch1:${query.replace(/"/g, '\\"')}"`;
+    // For YouTube results, use direct video URL; for iTunes, search by title+artist
+    const target = source === 'itunes'
+      ? `"ytsearch1:${videoIdOrQuery.replace(/"/g, '\\"')}"`
+      : `"https://www.youtube.com/watch?v=${videoIdOrQuery}"`;
+    const cmd = `"${ytDlp}" -f "bestaudio/best" --extractor-args "youtube:player_client=android" --get-url ${target}`;
 
     console.log('Running yt-dlp cmd:', cmd);
     exec(cmd, { timeout: 30000 }, (error, stdout, stderr) => {

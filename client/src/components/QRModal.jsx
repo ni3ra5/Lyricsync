@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function QRModal({ qrDataUrl, joinUrl, guestCount }) {
+export default function QRModal({ qrDataUrl, joinUrl, guestCount, hideGuestCount }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -10,7 +10,7 @@ export default function QRModal({ qrDataUrl, joinUrl, guestCount }) {
         {qrDataUrl && <img src={qrDataUrl} alt="QR" className="qr-trigger__img" />}
         <span className="qr-trigger__info">
           <span className="qr-trigger__label">Scan to join</span>
-          <span className="qr-trigger__guests">{guestCount} guest{guestCount !== 1 ? 's' : ''}</span>
+          {!hideGuestCount && <span className="qr-trigger__guests">{guestCount} guest{guestCount !== 1 ? 's' : ''}</span>}
         </span>
       </button>
 
@@ -27,7 +27,7 @@ export default function QRModal({ qrDataUrl, joinUrl, guestCount }) {
               {qrDataUrl && <img src={qrDataUrl} alt="QR Code" className="qr-modal__img" />}
               <p className="qr-modal__title">Scan to join</p>
               <p className="qr-modal__url">{joinUrl}</p>
-              <p className="qr-modal__guests">{guestCount} guest{guestCount !== 1 ? 's' : ''}</p>
+              {!hideGuestCount && <p className="qr-modal__guests">{guestCount} guest{guestCount !== 1 ? 's' : ''}</p>}
             </div>
           </div>
         </div>

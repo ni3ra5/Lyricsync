@@ -156,8 +156,8 @@ export default function HostView() {
               </svg>
             </button>
             <h1 className="app-logo">
-              <span className="app-logo__accent">Music</span>
-              <span className="app-logo__text">Sync</span>
+              <span className="app-logo__accent">Lyric</span>
+              <span className="app-logo__text">sync</span>
             </h1>
           </div>
           <div className="app-header__search">

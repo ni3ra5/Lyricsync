@@ -100,8 +100,8 @@ export default function GuestView() {
           </svg>
         </button>
         <h1 className="app-logo" style={{ flex: 1 }}>
-          <span className="app-logo__accent">Music</span>
-          <span className="app-logo__text">Sync</span>
+          <span className="app-logo__accent">Lyric</span>
+          <span className="app-logo__text">sync</span>
         </h1>
         <div className="connection-status">
           <span className={`connection-dot ${connected ? 'connection-dot--live' : 'connection-dot--disconnected'}`} />

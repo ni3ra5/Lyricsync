@@ -24,7 +24,7 @@ export default function NowPlaying({ song, elapsed, lyrics, onSeek, playing, onP
       <div className="now-playing__info">
         <h2 className="now-playing__title">{song.title}</h2>
         <p className="now-playing__artist">{song.artist}</p>
-        {totalMs > 0 && (
+        {totalMs > 0 && (playing || elapsed > 0) && (
           <div className="now-playing__progress-row">
             <div
               className="progress-bar"

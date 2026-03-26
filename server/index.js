@@ -162,15 +162,32 @@ io.on('connection', (socket) => {
     restartTimer(roomId);
 
     room.song = { title, artist, artworkUrl, trackId, durationMs: durationMs || 0 };
-
-    // Fetch lyrics
-    const { lyrics, plainLyrics } = await fetchLyrics(artist, title);
-    room.lyrics = lyrics;
-    room.plainLyrics = plainLyrics;
-
-    // Skip iTunes preview (30s clip from middle of song) — wait for full song
+    room.lyrics = null;
+    room.plainLyrics = null;
     room.audioUrl = null;
     room.previewUrl = previewUrl;
+
+    // Broadcast song change immediately so guests see the new song right away
+    io.to(roomId).emit('song:changed', {
+      song: room.song,
+      lyrics: null,
+      plainLyrics: null,
+    });
+
+    // Fetch lyrics in background, then update clients
+    try {
+      const { lyrics, plainLyrics } = await fetchLyrics(artist, title);
+      room.lyrics = lyrics;
+      room.plainLyrics = plainLyrics;
+
+      io.to(roomId).emit('song:changed', {
+        song: room.song,
+        lyrics: room.lyrics,
+        plainLyrics: room.plainLyrics,
+      });
+    } catch (err) {
+      console.error('Lyrics fetch failed:', err.message);
+    }
 
     // Fetch full song via yt-dlp
     fetchAudioUrl(title, artist)
@@ -182,12 +199,6 @@ io.on('connection', (socket) => {
         console.error('Audio fetch failed:', err.message);
         io.to(roomId).emit('audio:error', { message: 'Background audio unavailable' });
       });
-
-    io.to(roomId).emit('song:changed', {
-      song: room.song,
-      lyrics: room.lyrics,
-      plainLyrics: room.plainLyrics,
-    });
   });
 
   socket.on('host:play', ({ roomId }) => {
@@ -266,7 +277,6 @@ io.on('connection', (socket) => {
       plainLyrics: room.plainLyrics,
       elapsed: getCurrentElapsed(room),
       playing: room.playing,
-      audioAvailable: !!room.audioUrl,
     });
 
     emitGuestCount(roomId);

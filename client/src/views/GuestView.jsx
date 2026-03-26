@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import socket from '../socket';
 import NowPlaying from '../components/NowPlaying';
@@ -13,6 +13,8 @@ export default function GuestView() {
   const [plainLyrics, setPlainLyrics] = useState(null);
   const [playing, setPlaying] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  const [lyricsLoading, setLyricsLoading] = useState(false);
+  const lyricsEmitCount = useRef(0);
   const [error, setError] = useState(null);
   const [connected, setConnected] = useState(socket.connected);
   const [qrDataUrl, setQrDataUrl] = useState(null);
@@ -45,6 +47,13 @@ export default function GuestView() {
       setPlainLyrics(pl);
       setElapsed(0);
       setPlaying(false);
+      if (l === null && pl === null && lyricsEmitCount.current === 0) {
+        setLyricsLoading(true);
+        lyricsEmitCount.current = 1;
+      } else {
+        setLyricsLoading(false);
+        lyricsEmitCount.current = 0;
+      }
     };
     const onError = ({ message }) => setError(message);
     const onConnect = () => {
@@ -109,7 +118,7 @@ export default function GuestView() {
         </div>
         {qrDataUrl && (
           <div className="app-header__qr">
-            <QRModal qrDataUrl={qrDataUrl} joinUrl={joinUrl} guestCount={0} />
+            <QRModal qrDataUrl={qrDataUrl} joinUrl={joinUrl} hideGuestCount />
           </div>
         )}
       </header>
@@ -118,7 +127,7 @@ export default function GuestView() {
         <div className="main-section">
           <div className="lyrics-section">
             <div className="lyrics-card card">
-              <LyricsDisplay lyrics={lyrics} plainLyrics={plainLyrics} />
+              <LyricsDisplay lyrics={lyrics} plainLyrics={plainLyrics} loading={lyricsLoading} />
             </div>
           </div>
           <div className="now-playing-section">

@@ -19,57 +19,109 @@ app.use(express.json());
 
 // --- API Routes ---
 
-// Search songs via iTunes, check lyrics availability
+// Search songs — supports YouTube and iTunes via ?source= param
 app.get('/api/search', async (req, res) => {
-  try {
-    const { term } = req.query;
-    if (!term) return res.json({ results: [] });
-    const response = await fetch(
-      `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=song&limit=10`
-    );
-    const data = await response.json();
-    const results = data.results.map((r) => ({
-      trackId: r.trackId,
-      title: r.trackName,
-      artist: r.artistName,
-      album: r.collectionName,
-      artworkUrl: r.artworkUrl100?.replace('100x100', '300x300'),
-      previewUrl: r.previewUrl || null,
-      durationMs: r.trackTimeMillis || 0,
-    }));
+  const { term, source } = req.query;
+  if (!term) return res.json({ results: [] });
 
-    // Check lyrics availability in parallel (all sources checked concurrently)
-    const lyricsChecks = results.map(async (r) => {
-      try {
-        const checks = [
-          // LRCLIB exact match
-          fetch(`https://lrclib.net/api/get?${new URLSearchParams({ artist_name: r.artist, track_name: r.title })}`, { signal: AbortSignal.timeout(3000) })
-            .then(res => res.ok ? res.json() : null)
-            .then(data => !!(data && (data.syncedLyrics || data.plainLyrics)))
-            .catch(() => false),
-          // LRCLIB fuzzy search
-          fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(`${r.artist} ${r.title}`)}`, { signal: AbortSignal.timeout(3000) })
-            .then(res => res.ok ? res.json() : [])
-            .then(data => data.length > 0 && !!(data[0].syncedLyrics || data[0].plainLyrics))
-            .catch(() => false),
-          // lyrics.ovh
-          fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(r.artist)}/${encodeURIComponent(r.title)}`, { signal: AbortSignal.timeout(3000) })
-            .then(res => res.ok ? res.json() : null)
-            .then(data => !!(data && data.lyrics))
-            .catch(() => false),
-        ];
-        const found = await Promise.any(checks.map((c, i) => c.then(v => { if (v) return true; throw new Error(); })))
-          .catch(() => false);
-        return { ...r, hasLyrics: found };
-      } catch {
-        return { ...r, hasLyrics: false };
-      }
+  try {
+    if (source === 'itunes') {
+      // iTunes search
+      const response = await fetch(
+        `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=song&limit=10`
+      );
+      const data = await response.json();
+      const results = data.results.map((r) => ({
+        trackId: String(r.trackId),
+        title: r.trackName,
+        artist: r.artistName,
+        album: r.collectionName,
+        artworkUrl: r.artworkUrl100?.replace('100x100', '300x300'),
+        previewUrl: r.previewUrl || null,
+        durationMs: r.trackTimeMillis || 0,
+        source: 'itunes',
+      }));
+      return res.json({ results });
+    }
+
+    // YouTube search (default)
+    const { exec } = require('child_process');
+    const ytDlp = process.env.YT_DLP_PATH || '/Users/nibraskhan/Library/Python/3.9/bin/yt-dlp';
+    const searchQuery = term.replace(/"/g, '\\"');
+    const cmd = `"${ytDlp}" --flat-playlist --dump-json "ytsearch10:${searchQuery}"`;
+
+    const output = await new Promise((resolve, reject) => {
+      exec(cmd, { timeout: 15000 }, (error, stdout, stderr) => {
+        if (error) return reject(error);
+        resolve(stdout);
+      });
     });
 
-    res.json({ results: await Promise.all(lyricsChecks) });
+    const results = output.trim().split('\n').filter(Boolean).map((line) => {
+      try {
+        const v = JSON.parse(line);
+        let title = v.title || '';
+        let artist = v.channel || v.uploader || '';
+        const dashMatch = title.match(/^(.+?)\s*[-–—]\s*(.+)$/);
+        if (dashMatch) {
+          artist = dashMatch[1].trim();
+          title = dashMatch[2].trim();
+        }
+        title = title.split(/\s*\|\s*/)[0].trim();
+        title = title.replace(/\s*\(?(official\s*(music\s*)?video|official\s*audio|lyric\s*video|lyrics|audio|hd|hq|mv)\)?/gi, '').trim();
+        return {
+          trackId: v.id,
+          title,
+          artist,
+          album: '',
+          artworkUrl: v.thumbnails?.[v.thumbnails.length - 1]?.url || `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`,
+          previewUrl: null,
+          durationMs: (v.duration || 0) * 1000,
+          source: 'youtube',
+        };
+      } catch { return null; }
+    }).filter(Boolean);
+
+    res.json({ results });
   } catch (err) {
-    console.error('iTunes search error:', err.message);
+    console.error('Search error:', err.message);
     res.status(500).json({ error: 'Search failed' });
+  }
+});
+
+// Check lyrics availability for a single song (all sources)
+app.get('/api/lyrics-check', async (req, res) => {
+  const { artist, title } = req.query;
+  if (!artist || !title) return res.json({ hasLyrics: false });
+
+  try {
+    const checks = [
+      // LRCLIB exact match
+      fetch(`https://lrclib.net/api/get?${new URLSearchParams({ artist_name: artist, track_name: title })}`, { signal: AbortSignal.timeout(6000) })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => !!(data && (data.syncedLyrics || data.plainLyrics)))
+        .catch(() => false),
+      // LRCLIB fuzzy search
+      fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(`${artist} ${title}`)}`, { signal: AbortSignal.timeout(6000) })
+        .then(r => r.ok ? r.json() : [])
+        .then(data => data.length > 0 && !!(data[0].syncedLyrics || data[0].plainLyrics))
+        .catch(() => false),
+      // JioSaavn
+      fetch(`https://www.jiosaavn.com/api.php?__call=search.getResults&p=1&q=${encodeURIComponent(`${title} ${artist}`)}&_format=json&_marker=0&ctx=wap6dot0&n=5`, { signal: AbortSignal.timeout(6000) })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => !!(data && data.results && data.results.some(s => s.has_lyrics === 'true' || s.has_lyrics === true)))
+        .catch(() => false),
+      // lyrics.ovh
+      fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(title)}`, { signal: AbortSignal.timeout(6000) })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => !!(data && data.lyrics))
+        .catch(() => false),
+    ];
+    const found = await Promise.any(checks.map(c => c.then(v => { if (v) return true; throw new Error(); })))
+      .catch(() => false);
+    res.json({ hasLyrics: found });
+  } catch {
+    res.json({ hasLyrics: false });
   }
 });
 
@@ -154,7 +206,7 @@ io.on('connection', (socket) => {
     callback({ roomId, ...qr });
   });
 
-  socket.on('host:selectSong', async ({ roomId, trackId, title, artist, artworkUrl, previewUrl, durationMs }) => {
+  socket.on('host:selectSong', async ({ roomId, trackId, title, artist, artworkUrl, previewUrl, durationMs, source }) => {
     const room = getRoom(roomId);
     if (!room) return;
 
@@ -174,23 +226,26 @@ io.on('connection', (socket) => {
       plainLyrics: null,
     });
 
-    // Fetch lyrics in background, then update clients
+    // Fetch lyrics in background with timeout, then update clients
     try {
-      const { lyrics, plainLyrics } = await fetchLyrics(artist, title);
+      const lyricsPromise = fetchLyrics(artist, title);
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Lyrics fetch timeout')), 15000));
+      const { lyrics, plainLyrics } = await Promise.race([lyricsPromise, timeoutPromise]);
       room.lyrics = lyrics;
       room.plainLyrics = plainLyrics;
-
-      io.to(roomId).emit('song:changed', {
-        song: room.song,
-        lyrics: room.lyrics,
-        plainLyrics: room.plainLyrics,
-      });
     } catch (err) {
       console.error('Lyrics fetch failed:', err.message);
     }
+    // Always emit update so client clears the loading state
+    io.to(roomId).emit('song:changed', {
+      song: room.song,
+      lyrics: room.lyrics,
+      plainLyrics: room.plainLyrics,
+    });
 
     // Fetch full song via yt-dlp
-    fetchAudioUrl(title, artist)
+    const audioQuery = source === 'itunes' ? `${title} ${artist} official audio` : trackId;
+    fetchAudioUrl(audioQuery, source)
       .then((url) => {
         room.audioUrl = url;
         io.to(roomId).emit('audio:ready', { audioUrl: `/audio/${roomId}?t=${Date.now()}` });

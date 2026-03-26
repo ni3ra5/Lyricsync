@@ -1,7 +1,16 @@
 import { useRef } from 'react';
 
-export default function LyricsDisplay({ lyrics, plainLyrics }) {
+export default function LyricsDisplay({ lyrics, plainLyrics, loading }) {
   const scrollRef = useRef(null);
+
+  if (loading) {
+    return (
+      <div className="lyrics-empty">
+        <div className="loading-spinner" />
+        <p className="lyrics-empty__text">Fetching lyrics...</p>
+      </div>
+    );
+  }
 
   if (!lyrics && !plainLyrics) {
     return (

@@ -1,7 +1,17 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const [qrData, setQrData] = useState(null);
+  const [showQrModal, setShowQrModal] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/homeqr')
+      .then((r) => r.json())
+      .then((data) => setQrData(data))
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="home">
@@ -62,6 +72,23 @@ export default function HomePage() {
       <footer className="home__footer">
         <span className="home__footer-text">Lyricsync</span>
       </footer>
+
+      {qrData && (
+        <button className="home-qr-btn" onClick={() => setShowQrModal(true)}>
+          <img src={qrData.qrDataUrl} alt="QR" className="home-qr-btn__img" />
+        </button>
+      )}
+
+      {showQrModal && qrData && (
+        <div className="home-qr-overlay" onClick={() => setShowQrModal(false)}>
+          <div className="home-qr-modal card" onClick={(e) => e.stopPropagation()}>
+            <img src={qrData.qrDataUrl} alt="QR" className="home-qr-modal__img" />
+            <p className="home-qr-modal__label">Scan to open on your phone</p>
+            <p className="home-qr-modal__url">{qrData.url}</p>
+            <button className="home-qr-modal__close" onClick={() => setShowQrModal(false)}>Close</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

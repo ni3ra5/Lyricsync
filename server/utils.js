@@ -14,8 +14,13 @@ function getLocalIP() {
 }
 
 async function generateQRData(roomId, port) {
-  const ip = getLocalIP();
-  const url = `http://${ip}:${port}/room/${roomId}`;
+  let url;
+  if (process.env.RENDER_EXTERNAL_URL) {
+    url = `${process.env.RENDER_EXTERNAL_URL}/room/${roomId}`;
+  } else {
+    const ip = getLocalIP();
+    url = `http://${ip}:${port}/room/${roomId}`;
+  }
   const qrDataUrl = await QRCode.toDataURL(url, {
     width: 300,
     margin: 2,

@@ -4,12 +4,12 @@ const { Server } = require('socket.io');
 const path = require('path');
 const { createRoom, getRoom, deleteRoom, startTimer, pauseTimer, restartTimer, getCurrentElapsed } = require('./rooms');
 const { fetchLyrics } = require('./lyrics');
-const { fetchAudioUrl, setupAudioRoute } = require('./audio');
+const { fetchAudioUrl, setupAudioRoute, ytDlpPath } = require('./audio');
 const { generateQRData, generateRoomId } = require('./utils');
 
 const app = express();
 const server = http.createServer(app);
-const PORT = 3002;
+const PORT = process.env.SERVER_PORT || process.env.PORT || 3002;
 
 const io = new Server(server, {
   cors: { origin: '*' },
@@ -46,7 +46,7 @@ app.get('/api/search', async (req, res) => {
 
     // YouTube search (default)
     const { exec } = require('child_process');
-    const ytDlp = process.env.YT_DLP_PATH || '/Users/nibraskhan/Library/Python/3.9/bin/yt-dlp';
+    const ytDlp = ytDlpPath;
     const searchQuery = term.replace(/"/g, '\\"');
     const cmd = `"${ytDlp}" --flat-playlist --dump-json "ytsearch10:${searchQuery}"`;
 
@@ -142,8 +142,13 @@ app.get('/api/room/:roomId/qr', async (req, res) => {
 app.get('/api/homeqr', async (req, res) => {
   const QRCode = require('qrcode');
   const { getLocalIP } = require('./utils');
-  const ip = getLocalIP();
-  const url = `http://${ip}:${PORT}`;
+  let url;
+  if (process.env.RENDER_EXTERNAL_URL) {
+    url = process.env.RENDER_EXTERNAL_URL;
+  } else {
+    const ip = getLocalIP();
+    url = `http://${ip}:${PORT}`;
+  }
   const qrDataUrl = await QRCode.toDataURL(url, {
     width: 200, margin: 1,
     color: { dark: '#F5F5F5', light: '#00000000' },

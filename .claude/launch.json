@@ -2,17 +2,13 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "lyricsync-server",
-      "runtimeExecutable": "node",
-      "runtimeArgs": ["server/index.js"],
-      "port": 3002
-    },
-    {
-      "name": "lyricsync-client",
+      "name": "lyricsync-dev",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "cwd": "client",
-      "port": 5174
+      "port": 5174,
+      "env": {
+        "SERVER_PORT": "3002"
+      }
     }
   ]
 }

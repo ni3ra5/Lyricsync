@@ -1,9 +1,27 @@
-const { exec } = require('child_process');
+const { exec, execSync } = require('child_process');
 const { getRoom } = require('./rooms');
+
+function resolveYtDlp() {
+  if (process.env.YT_DLP_PATH) return process.env.YT_DLP_PATH;
+  try {
+    execSync('which yt-dlp', { stdio: 'ignore' });
+    return 'yt-dlp';
+  } catch {
+    const localPath = `${process.env.HOME}/Library/Python/3.9/bin/yt-dlp`;
+    try {
+      require('fs').accessSync(localPath);
+      return localPath;
+    } catch {
+      return 'yt-dlp';
+    }
+  }
+}
+
+const ytDlpPath = resolveYtDlp();
 
 function fetchAudioUrl(videoIdOrQuery, source) {
   return new Promise((resolve, reject) => {
-    const ytDlp = process.env.YT_DLP_PATH || '/Users/nibraskhan/Library/Python/3.9/bin/yt-dlp';
+    const ytDlp = ytDlpPath;
     // For YouTube results, use direct video URL; for iTunes, search by title+artist
     const target = source === 'itunes'
       ? `"ytsearch1:${videoIdOrQuery.replace(/"/g, '\\"')}"`
@@ -74,4 +92,4 @@ function setupAudioRoute(app) {
   });
 }
 
-module.exports = { fetchAudioUrl, setupAudioRoute };
+module.exports = { fetchAudioUrl, setupAudioRoute, ytDlpPath };
